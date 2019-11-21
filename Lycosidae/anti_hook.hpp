@@ -7,12 +7,11 @@
 #include <Psapi.h>
 #include <Shlwapi.h>
 #include <winternl.h>
+
 #include "api_obfuscation.hpp"
 #include "Lycosidae.hpp"
 
 #pragma comment(lib, "Shlwapi.lib")
-
-#define NtCurrentProcess() ((HANDLE)-1)
 
 typedef enum _ERR_CODE {
   ERR_SUCCESS,
@@ -111,14 +110,14 @@ unsigned int __tid()
 
 PVOID Alloc(OPTIONAL PVOID Base, SIZE_T Size, ULONG Protect)
 {
-  NTSTATUS Status = hash_NtAllocateVirtualMemory(NtCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
+  NTSTATUS Status = hash_NtAllocateVirtualMemory(hash_GetCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
   return NT_SUCCESS(Status) ? Base : NULL;
 }
 
 VOID Free(PVOID Base)
 {
   SIZE_T RegionSize = 0;
-  hash_NtFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+  hash_NtFreeVirtualMemory(hash_GetCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
 }
 
 BOOLEAN NTAPI EnumProcesses_(
