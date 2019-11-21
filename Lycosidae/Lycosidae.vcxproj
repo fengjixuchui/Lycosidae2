@@ -158,7 +158,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Lycosidae.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="t1ha\src\t1ha0.c" />
     <ClCompile Include="t1ha\src\t1ha0_ia32aes_avx.c" />
     <ClCompile Include="t1ha\src\t1ha0_ia32aes_avx2.c" />
