@@ -8,6 +8,7 @@
 #include <Shlwapi.h>
 #include <winternl.h>
 #include "api_obfuscation.hpp"
+#include "Lycosidae.hpp"
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -81,96 +82,6 @@ typedef enum _WRK_MEMORY_INFORMATION_CLASS {
   MemoryBasicInformation
 } WRK_MEMORY_INFORMATION_CLASS, * PWRK_MEMORY_INFORMATION_CLASS;
 
-extern "C" NTSYSAPI NTSTATUS NTAPI NtOpenThread(
-  OUT PHANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN CLIENT_ID *ClientId
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtSuspendThread(
-  IN HANDLE ThreadHandle,
-  OUT OPTIONAL PULONG PreviousSuspendCount
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtResumeThread(
-  IN HANDLE ThreadHandle,
-  OUT OPTIONAL PULONG SuspendCount
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtAllocateVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG ZeroBits,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG AllocationType,
-  IN ULONG Protect
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtProtectVirtualMemory(
-  IN HANDLE  ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN OUT PSIZE_T NumberOfBytesToProtect,
-  IN ULONG NewAccessProtection,
-  OUT PULONG OldAccessProtection
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtQueryVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN PVOID BaseAddress,
-  IN WRK_MEMORY_INFORMATION_CLASS MemoryInformationClass,
-  OUT PVOID Buffer,
-  IN SIZE_T Length,
-  OUT OPTIONAL PSIZE_T ResultLength
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtFreeVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN PVOID *BaseAddress,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG FreeType
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtSuspendThread(
-  IN HANDLE ThreadHandle,
-  OUT OPTIONAL PULONG PreviousSuspendCount
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtResumeThread(
-  IN HANDLE ThreadHandle,
-  OUT OPTIONAL PULONG SuspendCount
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtGetContextThread(
-  IN HANDLE ThreadHandle,
-  OUT PCONTEXT Context
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtSetContextThread(
-  IN HANDLE ThreadHandle,
-  IN PCONTEXT Context
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI NtFlushInstructionCache(
-  IN HANDLE ProcessHandle,
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytesToFlush
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI LdrGetDllHandle(
-  IN OPTIONAL PWORD pwPath,
-  IN OPTIONAL PVOID Unused,
-  IN PUNICODE_STRING ModuleFileName,
-  OUT PHANDLE pHModule
-);
-
-extern "C" NTSYSAPI NTSTATUS NTAPI LdrGetProcedureAddress(
-  IN HMODULE ModuleHandle,
-  IN OPTIONAL PANSI_STRING FunctionName,
-  IN OPTIONAL WORD Oridinal,
-  OUT PVOID *FunctionAddress
-);
-
 void *__teb()
 {
 #ifdef _AMD64_
@@ -200,14 +111,14 @@ unsigned int __tid()
 
 PVOID Alloc(OPTIONAL PVOID Base, SIZE_T Size, ULONG Protect)
 {
-  NTSTATUS Status = NtAllocateVirtualMemory(NtCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
+  NTSTATUS Status = hash_NtAllocateVirtualMemory(NtCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
   return NT_SUCCESS(Status) ? Base : NULL;
 }
 
 VOID Free(PVOID Base)
 {
   SIZE_T RegionSize = 0;
-  NtFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+  hash_NtFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
 }
 
 BOOLEAN NTAPI EnumProcesses_(
@@ -218,12 +129,12 @@ BOOLEAN NTAPI EnumProcesses_(
   OPTIONAL PVOID Argument
 ) {
   ULONG Length = 0;
-  NTSTATUS Status = NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
+  NTSTATUS Status = hash_NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
   // TODO: need test status 0xC0000004L
   if (Status != ((NTSTATUS)0xC0000004L)) return FALSE;
   PWRK_SYSTEM_PROCESS_INFORMATION Info = (PWRK_SYSTEM_PROCESS_INFORMATION)Alloc(NULL, Length, PAGE_READWRITE);
   if (!Info) return FALSE;
-  Status = NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
+  Status = hash_NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
   if (!NT_SUCCESS(Status)) {
     Free(Info);
     return FALSE;
@@ -244,15 +155,15 @@ BOOLEAN SuspendResumeCallback(PWRK_SYSTEM_PROCESS_INFORMATION Process, PVOID Arg
   for (unsigned int i = 0; i < Process->NumberOfThreads; ++i) {
     if ((SIZE_T)Process->Threads[i].ClientId.UniqueThread == (SIZE_T)Info->CurrentTid) continue;
     HANDLE hThread = NULL;
-    NTSTATUS Status = NtOpenThread(&hThread, THREAD_SUSPEND_RESUME, NULL, &Process->Threads[i].ClientId);
+    NTSTATUS Status = hash_NtOpenThread(&hThread, THREAD_SUSPEND_RESUME, NULL, (PCLIENT_ID)&Process->Threads[i].ClientId);
     if (NT_SUCCESS(Status) && hThread) {
       ULONG SuspendCount = 0;
       switch (Info->Type) {
         case srtSuspend:
-          NtSuspendThread(hThread, &SuspendCount);
+          hash_NtSuspendThread(hThread, &SuspendCount);
           break;
         case srtResume:
-          NtResumeThread(hThread, &SuspendCount);
+          hash_NtResumeThread(hThread, &SuspendCount);
           break;
       }
       hash_NtClose(hThread);
@@ -281,7 +192,7 @@ BOOLEAN ResumeThreads()
 
 DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize)
 {
-  DWORD dwLength = GetModuleFileNameExA(
+  DWORD dwLength = hash_GetModuleFileNameExA(
                      hash_GetCurrentProcess(),	// Process handle.
                      hModule,				// Module handle.
                      szModuleName,			// Pointer to buffer to receive file name.
@@ -321,7 +232,7 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
   // Walk the section headers and find the .text section.
   for (WORD i = 0; i < pinh->FileHeader.NumberOfSections; i++) {
     PIMAGE_SECTION_HEADER pish = (PIMAGE_SECTION_HEADER)((DWORD_PTR)IMAGE_FIRST_SECTION(pinh) + ((DWORD_PTR)IMAGE_SIZEOF_SECTION_HEADER * i));
-    if (!strcmp((const char *)pish->Name, ".text")) {
+    if (!str_cmp((const wchar_t *)pish->Name, (const wchar_t *)".text")) {
       // Deprotect the module's memory region for write permissions.
       DWORD flProtect = ProtectMemory(
                           (LPVOID)((DWORD_PTR)hModule + (DWORD_PTR)pish->VirtualAddress),	// Address to protect.
@@ -385,7 +296,7 @@ DWORD UnhookModule(const HMODULE hModule)
     return ERR_CREATE_FILE_FAILED;
   }
   // Create a mapping object for the module.
-  HANDLE hFileMapping = CreateFileMapping(
+  HANDLE hFileMapping = hash_CreateFileMappingW(
                           hFile,						// Handle to file.
                           NULL,						// Mapping attributes.
                           PAGE_READONLY | SEC_IMAGE,	// Page protection.
@@ -406,7 +317,7 @@ DWORD UnhookModule(const HMODULE hModule)
     return ERR_CREATE_FILE_MAPPING_ALREADY_EXISTS;
   }
   // Map the module.
-  LPVOID lpMapping = MapViewOfFile(
+  LPVOID lpMapping = hash_MapViewOfFile(
                        hFileMapping,	// Handle of mapping object.
                        FILE_MAP_READ,	// Desired access.
                        0,				// File offset high DWORD.
@@ -429,14 +340,14 @@ DWORD UnhookModule(const HMODULE hModule)
   if (dwRet) {
     // Something went wrong!
     // Clean up.
-    UnmapViewOfFile(lpMapping);
+    hash_UnmapViewOfFile(lpMapping);
     hash_CloseHandle(hFileMapping);
     hash_CloseHandle(hFile);
     return dwRet;
   }
   //getchar();
   // Clean up.
-  UnmapViewOfFile(lpMapping);
+  hash_UnmapViewOfFile(lpMapping);
   hash_CloseHandle(hFileMapping);
   hash_CloseHandle(hFile);
   return ERR_SUCCESS;

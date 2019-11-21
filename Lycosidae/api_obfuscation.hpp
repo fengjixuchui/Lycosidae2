@@ -583,6 +583,64 @@ BOOL(*temp_QueryInformationJobObject)(HANDLE             hJob,
 DWORD(*temp_K32GetProcessImageFileNameW)(HANDLE hProcess,
     LPWSTR  lpImageFileName,
     DWORD  nSize) = nullptr;
+
+LPVOID(*temp_MapViewOfFile)(HANDLE hFileMappingObject,
+                            DWORD  dwDesiredAccess,
+                            DWORD  dwFileOffsetHigh,
+                            DWORD  dwFileOffsetLow,
+                            SIZE_T dwNumberOfBytesToMap) = nullptr;
+
+HANDLE(*temp_CreateFileMappingW)(HANDLE                hFile,
+                                 LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+                                 DWORD                 flProtect,
+                                 DWORD                 dwMaximumSizeHigh,
+                                 DWORD                 dwMaximumSizeLow,
+                                 LPCWSTR               lpName) = nullptr;
+
+DWORD(*temp_GetModuleFileNameExA)(HANDLE  hProcess,
+                                  HMODULE hModule,
+                                  LPSTR   lpFilename,
+                                  DWORD   nSize) = nullptr;
+
+BOOL(*temp_UnmapViewOfFile)(LPCVOID lpBaseAddress) = nullptr;
+
+DWORD(*temp_K32GetModuleFileNameExA)(HANDLE process, HMODULE module, LPSTR file_name, DWORD size) = nullptr;
+
+typedef struct _CLIENT_ID_c
+{
+  PVOID UniqueProcess;
+  PVOID UniqueThread;
+} CLIENT_ID_c, * PCLIENT_ID;
+
+NTSTATUS(*temp_NtOpenThread)(_Out_ PHANDLE            ThreadHandle,
+                             _In_  ACCESS_MASK        DesiredAccess,
+                             _In_  POBJECT_ATTRIBUTES ObjectAttributes,
+                             _In_  PCLIENT_ID         ClientId) = nullptr;
+
+
+NTSTATUS(*temp_NtResumeThread)(IN HANDLE               ThreadHandle,
+                               OUT PULONG              SuspendCount OPTIONAL) = nullptr;
+
+NTSTATUS(*temp_NtAllocateVirtualMemory)(HANDLE    ProcessHandle,
+                                        PVOID *BaseAddress,
+                                        ULONG_PTR ZeroBits,
+                                        PSIZE_T   RegionSize,
+                                        ULONG     AllocationType,
+                                        ULONG     Protect) = nullptr;
+
+NTSTATUS(*temp_NtSuspendThread)(IN HANDLE               ThreadHandle,
+                                OUT PULONG              PreviousSuspendCount OPTIONAL) = nullptr;
+
+NTSTATUS(*temp_NtQuerySystemInformation)(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    OUT PVOID                   SystemInformation,
+    IN ULONG                    SystemInformationLength,
+    OUT PULONG                  ReturnLength) = nullptr;
+
+NTSTATUS(*temp_NtFreeVirtualMemory)(HANDLE  ProcessHandle,
+                                    PVOID *BaseAddress,
+                                    PSIZE_T RegionSize,
+                                    ULONG   FreeType) = nullptr;
+
 #pragma endregion Pointer Hash Functions
 
 // -----------------
@@ -1961,6 +2019,7 @@ DWORD hash_K32GetProcessImageFileNameW(HANDLE hProcess,
                                           lpImageFileName,
                                           nSize);
 }
+
 HANDLE hash_GetCurrentThread()
 {
   const char *func = (LPCSTR)PRINT_HIDE_STR("GetCurrentThread");
@@ -1968,5 +2027,179 @@ HANDLE hash_GetCurrentThread()
   temp_GetCurrentThread = static_cast<HANDLE(*)()>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
                           strlen(func), STRONG_SEED));
   return temp_GetCurrentThread();
+}
+
+LPVOID hash_MapViewOfFile(HANDLE hFileMappingObject,
+                          DWORD  dwDesiredAccess,
+                          DWORD  dwFileOffsetHigh,
+                          DWORD  dwFileOffsetLow,
+                          SIZE_T dwNumberOfBytesToMap)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("MapViewOfFile");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_MapViewOfFile = static_cast<LPVOID(*)(HANDLE,
+                       DWORD,
+                       DWORD,
+                       DWORD,
+                       SIZE_T )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
+                                         strlen(func), STRONG_SEED));
+  return temp_MapViewOfFile( hFileMappingObject,
+                             dwDesiredAccess,
+                             dwFileOffsetHigh,
+                             dwFileOffsetLow,
+                             dwNumberOfBytesToMap);
+}
+
+HANDLE hash_CreateFileMappingW(HANDLE                hFile,
+                               LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+                               DWORD                 flProtect,
+                               DWORD                 dwMaximumSizeHigh,
+                               DWORD                 dwMaximumSizeLow,
+                               LPCWSTR               lpName)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("CreateFileMappingW");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_CreateFileMappingW = static_cast<HANDLE(*)(HANDLE,
+                            LPSECURITY_ATTRIBUTES,
+                            DWORD,
+                            DWORD,
+                            DWORD,
+                            LPCWSTR               )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
+                                strlen(func), STRONG_SEED));
+  return temp_CreateFileMappingW(hFile,
+                                 lpFileMappingAttributes,
+                                 flProtect,
+                                 dwMaximumSizeHigh,
+                                 dwMaximumSizeLow,
+                                 lpName);
+}
+
+DWORD hash_GetModuleFileNameExA(HANDLE  hProcess,
+                                HMODULE hModule,
+                                LPSTR   lpFilename,
+                                DWORD   nSize)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("K32GetModuleFileNameExA");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_GetModuleFileNameExA = static_cast<DWORD(*)(HANDLE,
+                              HMODULE,
+                              LPSTR,
+                              DWORD   )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
+                                         strlen(func), STRONG_SEED));
+  return temp_GetModuleFileNameExA(  hProcess,
+                                     hModule,
+                                     lpFilename,
+                                     nSize);
+}
+
+BOOL hash_UnmapViewOfFile(LPCVOID lpBaseAddress)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("UnmapViewOfFile");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_UnmapViewOfFile = static_cast<BOOL(*)(LPCVOID)>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
+                         strlen(func), STRONG_SEED));
+  return temp_UnmapViewOfFile(lpBaseAddress);
+}
+
+NTSTATUS hash_NtOpenThread(_Out_ PHANDLE            ThreadHandle,
+                           _In_  ACCESS_MASK        DesiredAccess,
+                           _In_  POBJECT_ATTRIBUTES ObjectAttributes,
+                           _In_  PCLIENT_ID         ClientId)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtOpenThread");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtOpenThread = static_cast<NTSTATUS(*)(_Out_ PHANDLE,
+                      _In_  ACCESS_MASK,
+                      _In_  POBJECT_ATTRIBUTES,
+                      _In_  PCLIENT_ID         )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                          STRONG_SEED));
+  return temp_NtOpenThread(ThreadHandle,
+                           DesiredAccess,
+                           ObjectAttributes,
+                           ClientId);
+}
+
+NTSTATUS hash_NtResumeThread(IN HANDLE               ThreadHandle,
+                             OUT PULONG              SuspendCount OPTIONAL)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtResumeThread");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtResumeThread = static_cast<NTSTATUS(*)(IN HANDLE,
+                        OUT PULONG              )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                            STRONG_SEED));
+  return temp_NtResumeThread(ThreadHandle,
+                             SuspendCount );
+}
+
+NTSTATUS hash_NtAllocateVirtualMemory(HANDLE    ProcessHandle,
+                                      PVOID *BaseAddress,
+                                      ULONG_PTR ZeroBits,
+                                      PSIZE_T   RegionSize,
+                                      ULONG     AllocationType,
+                                      ULONG     Protect)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtAllocateVirtualMemory");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtAllocateVirtualMemory = static_cast<NTSTATUS(*)(HANDLE,
+                                 PVOID *,
+                                 ULONG_PTR,
+                                 PSIZE_T,
+                                 ULONG,
+                                 ULONG     )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                                     STRONG_SEED));
+  return temp_NtAllocateVirtualMemory(    ProcessHandle,
+                                          BaseAddress,
+                                          ZeroBits,
+                                          RegionSize,
+                                          AllocationType,
+                                          Protect);
+}
+
+NTSTATUS hash_NtSuspendThread(IN HANDLE               ThreadHandle,
+                              OUT PULONG              PreviousSuspendCount OPTIONAL)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtSuspendThread");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtSuspendThread = static_cast<NTSTATUS(*)(IN HANDLE,
+                         OUT PULONG              )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                             STRONG_SEED));
+  return temp_NtSuspendThread(ThreadHandle,
+                              PreviousSuspendCount);
+}
+
+NTSTATUS hash_NtQuerySystemInformation(IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+                                       OUT PVOID                   SystemInformation,
+                                       IN ULONG                    SystemInformationLength,
+                                       OUT PULONG                  ReturnLength)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtQuerySystemInformation");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtQuerySystemInformation = static_cast<NTSTATUS(*)(IN SYSTEM_INFORMATION_CLASS,
+                                  OUT PVOID,
+                                  IN ULONG,
+                                  OUT PULONG                  )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                                      STRONG_SEED));
+  return temp_NtQuerySystemInformation( SystemInformationClass,
+                                        SystemInformation,
+                                        SystemInformationLength,
+                                        ReturnLength);
+}
+
+NTSTATUS hash_NtFreeVirtualMemory(HANDLE  ProcessHandle,
+                                  PVOID *BaseAddress,
+                                  PSIZE_T RegionSize,
+                                  ULONG   FreeType)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtFreeVirtualMemory");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtFreeVirtualMemory = static_cast<NTSTATUS(*)(HANDLE,
+                             PVOID *,
+                             PSIZE_T,
+                             ULONG   )>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                                        STRONG_SEED));
+  return temp_NtFreeVirtualMemory( ProcessHandle,
+                                   BaseAddress,
+                                   RegionSize,
+                                   FreeType);
 }
 #pragma endregion Custom Functions
