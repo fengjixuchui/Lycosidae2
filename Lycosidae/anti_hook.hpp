@@ -13,6 +13,8 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 
+#define NtCurrentProcess() ((HANDLE)-1)
+
 typedef enum _ERR_CODE {
   ERR_SUCCESS,
   ERR_ENUM_PROCESS_MODULES_FAILED,
@@ -110,14 +112,14 @@ unsigned int __tid()
 
 PVOID Alloc(OPTIONAL PVOID Base, SIZE_T Size, ULONG Protect)
 {
-  NTSTATUS Status = hash_NtAllocateVirtualMemory(hash_GetCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
+  NTSTATUS Status = hash_NtAllocateVirtualMemory(NtCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
   return NT_SUCCESS(Status) ? Base : NULL;
 }
 
 VOID Free(PVOID Base)
 {
   SIZE_T RegionSize = 0;
-  hash_NtFreeVirtualMemory(hash_GetCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+  hash_NtFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
 }
 
 BOOLEAN NTAPI EnumProcesses_(
@@ -128,12 +130,11 @@ BOOLEAN NTAPI EnumProcesses_(
   OPTIONAL PVOID Argument
 ) {
   ULONG Length = 0;
-  NTSTATUS Status = hash_NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
-  // TODO: need test status 0xC0000004L
+  NTSTATUS Status = NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
   if (Status != ((NTSTATUS)0xC0000004L)) return FALSE;
   PWRK_SYSTEM_PROCESS_INFORMATION Info = (PWRK_SYSTEM_PROCESS_INFORMATION)Alloc(NULL, Length, PAGE_READWRITE);
   if (!Info) return FALSE;
-  Status = hash_NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
+  Status = NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
   if (!NT_SUCCESS(Status)) {
     Free(Info);
     return FALSE;
@@ -200,7 +201,6 @@ DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize
   // GetModuleFileNameEx returns 0 on error.
   if (dwLength == 0) {
     // Default value if the module name cannot be found.
-#pragma warning (disable : 4996)
     strncpy(szModuleName, "<not found>", nSize - 1);
     return ERR_MOD_NAME_NOT_FOUND;
   }
@@ -239,6 +239,7 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
                           PAGE_EXECUTE_READWRITE											// Desired protection.
                         );
       if (!flProtect) {
+        ResumeThreads();
         // Deprotecting failed!
         return ERR_MEM_DEPROTECT_FAILED;
       }
@@ -255,15 +256,17 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
                     flProtect														// Revert to old protection.
                   );
       if (!flProtect) {
+        ResumeThreads();
         // Reprotecting went wrong!
         return ERR_MEM_REPROTECT_FAILED;
       }
+      ResumeThreads();
       return ERR_SUCCESS;
     }
   }
   // .text section not found?
-  return ERR_TEXT_SECTION_NOT_FOUND;
   ResumeThreads();
+  return ERR_TEXT_SECTION_NOT_FOUND;
 }
 
 DWORD UnhookModule(const HMODULE hModule)
@@ -282,26 +285,26 @@ DWORD UnhookModule(const HMODULE hModule)
   }
   // Get a handle to the module's file.
   HANDLE hFile = hash_CreateFileA(
-                   szModuleName,		// Module path name.
-                   GENERIC_READ,		// Desired access.
-                   FILE_SHARE_READ,	// Share access.
-                   NULL,				// Security attributes.
-                   OPEN_EXISTING,		// Creation disposition.
-                   0,					// Attributes.
-                   NULL				// Template file handle.
+                   szModuleName,		                // Module path name.
+                   GENERIC_READ,		                // Desired access.
+                   FILE_SHARE_READ,	                    // Share access.
+                   NULL,				                // Security attributes.
+                   OPEN_EXISTING,		                // Creation disposition.
+                   0,					                // Attributes.
+                   NULL				                    // Template file handle.
                  );
   if (hFile == INVALID_HANDLE_VALUE) {
     // Failed to open file.
     return ERR_CREATE_FILE_FAILED;
   }
   // Create a mapping object for the module.
-  HANDLE hFileMapping = hash_CreateFileMappingW(
+  HANDLE hFileMapping = CreateFileMapping(
                           hFile,						// Handle to file.
-                          NULL,						// Mapping attributes.
+                          NULL,						    // Mapping attributes.
                           PAGE_READONLY | SEC_IMAGE,	// Page protection.
                           0,							// Maximum size high DWORD.
                           0,							// Maximum size low DWORD.
-                          NULL						// Name of mapping object.
+                          NULL						    // Name of mapping object.
                         );
   if (!hFileMapping) {
     // Failed to create mapping handle.
@@ -317,11 +320,11 @@ DWORD UnhookModule(const HMODULE hModule)
   }
   // Map the module.
   LPVOID lpMapping = hash_MapViewOfFile(
-                       hFileMapping,	// Handle of mapping object.
-                       FILE_MAP_READ,	// Desired access.
-                       0,				// File offset high DWORD.
-                       0,				// File offset low DWORD.
-                       0				// Number of bytes to map.
+                       hFileMapping,	                // Handle of mapping object.
+                       FILE_MAP_READ,	                // Desired access.
+                       0,				                // File offset high DWORD.
+                       0,				                // File offset low DWORD.
+                       0				                // Number of bytes to map.
                      );
   if (!lpMapping) {
     // Mapping failed.
@@ -344,7 +347,6 @@ DWORD UnhookModule(const HMODULE hModule)
     hash_CloseHandle(hFile);
     return dwRet;
   }
-  //getchar();
   // Clean up.
   hash_UnmapViewOfFile(lpMapping);
   hash_CloseHandle(hFileMapping);
@@ -355,7 +357,7 @@ DWORD UnhookModule(const HMODULE hModule)
 HMODULE AddModule(const char *lpLibName) {
   HMODULE hModule = hash_GetModuleHandleA(lpLibName);
   if (!hModule) {
-    hModule = hash_LoadLibraryAA(lpLibName);
+    hModule = hash_LoadLibraryA(lpLibName);
   }
   return hModule;
 }
@@ -365,7 +367,10 @@ DWORD Unhook(const char *lpLibName) {
   DWORD hMod = UnhookModule(hModule);
   // free lib
   if (hMod) {
-    hash_FreeLibrary(hModule);
+    FreeModule(hModule);
+  }
+  else {
+    FreeModule(hModule);
   }
   return hMod;
 }
