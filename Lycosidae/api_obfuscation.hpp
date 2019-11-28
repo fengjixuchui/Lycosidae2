@@ -65,7 +65,17 @@ __forceinline const wchar_t *char_to_wchar(const char *c)
   mbstowcs(wc, c, cSize);
   return wc;
 }
-
+__forceinline int str_cmp3(const wchar_t *x, const wchar_t *y)
+{
+  while (*x)
+  {
+    if (*x != *y)
+      break;
+    x++;
+    y++;
+  }
+  return *static_cast<const wchar_t *>(x) - *static_cast<const wchar_t *>(y);
+}
 static HMODULE(WINAPI *temp_LoadLibraryA)(__in LPCSTR file_name) = nullptr;
 
 static int (*temp_lstrcmpiW)(LPCWSTR lpString1, LPCWSTR lpString2) = nullptr;
@@ -181,7 +191,7 @@ __forceinline LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, con
     mdl = (LDR_MODULE *)mdl->e[0].Flink;
     if (mdl->base != nullptr)
     {
-      if (!hash_lstrcmpiW(mdl->dllname.Buffer, char_to_wchar((LPCSTR)PRINT_HIDE_STR("kernel32.dll"))))
+      if (!str_cmp3(mdl->dllname.Buffer, char_to_wchar((LPCSTR)PRINT_HIDE_STR("kernel32.dll"))))
       {
         break;
       }

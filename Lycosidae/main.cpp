@@ -36,7 +36,7 @@ int main()
     log((LPCSTR)PRINT_HIDE_STR("kernel32 fail restored\r\n"));
 #endif
   }
-  if (Unhook("user32.dll") == 0) {
+  if (Unhook((LPCSTR)PRINT_HIDE_STR("user32.dll")) == 0) {
 #ifndef ANTIHOOK_LOG
     log((LPCSTR)PRINT_HIDE_STR("user32 restored\r\n"));
 #endif
