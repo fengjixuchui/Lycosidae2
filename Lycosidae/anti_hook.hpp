@@ -201,7 +201,7 @@ DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize
   // GetModuleFileNameEx returns 0 on error.
   if (dwLength == 0) {
     // Default value if the module name cannot be found.
-    strncpy(szModuleName, (LPCSTR)PRINT_HIDE_STR("<not found>"), nSize - 1);
+    strncpy(szModuleName, (LPCSTR)PRINT_HIDE_STR("<not found>"), nSize - 1); // TODO: not tested error with HideString
     return ERR_MOD_NAME_NOT_FOUND;
   }
   return ERR_SUCCESS;
@@ -230,7 +230,7 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
   // Walk the section headers and find the .text section.
   for (WORD i = 0; i < pinh->FileHeader.NumberOfSections; i++) {
     PIMAGE_SECTION_HEADER pish = (PIMAGE_SECTION_HEADER)((DWORD_PTR)IMAGE_FIRST_SECTION(pinh) + ((DWORD_PTR)IMAGE_SIZEOF_SECTION_HEADER * i));
-    if (!str_cmp((const wchar_t *)pish->Name, (const wchar_t *)(LPCSTR)PRINT_HIDE_STR(".text"))) {
+    if (!str_cmp2((const char *)pish->Name, (LPCSTR)PRINT_HIDE_STR(".text"))) {
       // Deprotect the module's memory region for write permissions.
       DWORD flProtect = ProtectMemory(
                           (LPVOID)((DWORD_PTR)hModule + (DWORD_PTR)pish->VirtualAddress),	// Address to protect.

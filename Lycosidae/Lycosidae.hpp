@@ -111,7 +111,20 @@ __forceinline int str_cmp(const wchar_t *x, const wchar_t *y)
   }
   return *static_cast<const wchar_t *>(x) - *static_cast<const wchar_t *>(y);
 }
-
+__forceinline int str_cmp2(const char *X, const char *Y)
+{
+  while (*X)
+  {
+    // if characters differ or end of second string is reached
+    if (*X != *Y)
+      break;
+    // move to next pair of characters
+    X++;
+    Y++;
+  }
+  // return the ASCII difference after converting char* to unsigned char*
+  return *(const unsigned char *)X - *(const unsigned char *)Y;
+}
 __forceinline BOOL nt_query_object_object_all_types_information()
 {
   const auto nt_query_object = reinterpret_cast<p_nt_query_object>(hash_GetProcAddress(
