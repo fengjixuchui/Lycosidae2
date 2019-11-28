@@ -640,6 +640,9 @@ NTSTATUS(*temp_NtFreeVirtualMemory)(HANDLE  ProcessHandle,
                                     PVOID *BaseAddress,
                                     PSIZE_T RegionSize,
                                     ULONG   FreeType) = nullptr;
+NTSTATUS(*temp_NtFlushInstructionCache)(IN HANDLE               ProcessHandle,
+                                        IN PVOID                BaseAddress,
+                                        IN ULONG                NumberOfBytesToFlush) = nullptr;
 
 #pragma endregion Pointer Hash Functions
 
@@ -2201,5 +2204,20 @@ NTSTATUS hash_NtFreeVirtualMemory(HANDLE  ProcessHandle,
                                    BaseAddress,
                                    RegionSize,
                                    FreeType);
+}
+
+NTSTATUS hash_NtFlushInstructionCache(IN HANDLE               ProcessHandle,
+                                      IN PVOID                BaseAddress,
+                                      IN ULONG                NumberOfBytesToFlush)
+{
+  const char *func = (LPCSTR)PRINT_HIDE_STR("NtFlushInstructionCache");
+  const auto _hash = t1ha0(func, strlen(func), STRONG_SEED);
+  temp_NtFlushInstructionCache = static_cast<NTSTATUS(*)(IN HANDLE,
+                                 IN PVOID,
+                                 IN ULONG)>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("ntdll.dll"), strlen(func),
+                                     STRONG_SEED));
+  return temp_NtFlushInstructionCache(ProcessHandle,
+                                      BaseAddress,
+                                      NumberOfBytesToFlush);
 }
 #pragma endregion Custom Functions
