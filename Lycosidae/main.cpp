@@ -16,34 +16,34 @@ __forceinline void log(First &&message, Rest &&...rest)
 
 int main()
 {
-  if (Unhook("ntdll.dll") == 0) {
+  if (Unhook((LPCSTR)PRINT_HIDE_STR("ntdll.dll")) == 0) {
 #ifndef ANTIHOOK_LOG
-    log("ntdll restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("ntdll restored\r\n"));
 #endif
   }
   else {
 #ifndef ANTIHOOK_LOG
-    log("ntdll fail restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("ntdll fail restored\r\n"));
 #endif
   }
-  if (Unhook("kernel32.dll") == 0) {
+  if (Unhook((LPCSTR)PRINT_HIDE_STR("kernel32.dll")) == 0) {
 #ifndef ANTIHOOK_LOG
-    log("kernel32 restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("kernel32 restored\r\n"));
 #endif
   }
   else {
 #ifndef ANTIHOOK_LOG
-    log("kernel32 fail restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("kernel32 fail restored\r\n"));
 #endif
   }
   if (Unhook("user32.dll") == 0) {
 #ifndef ANTIHOOK_LOG
-    log("user32 restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("user32 restored\r\n"));
 #endif
   }
   else {
 #ifndef ANTIHOOK_LOG
-    log("user32 fail restored\r\n");
+    log((LPCSTR)PRINT_HIDE_STR("user32 fail restored\r\n"));
 #endif
   }
   const auto enable_debug_checks = 1;
