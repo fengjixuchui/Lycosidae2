@@ -194,9 +194,9 @@ DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize
 {
   DWORD dwLength = hash_GetModuleFileNameExA(
                      hash_GetCurrentProcess(),	// Process handle.
-                     hModule,				// Module handle.
-                     szModuleName,			// Pointer to buffer to receive file name.
-                     nSize					// Size of the buffer in characters.
+                     hModule,				    // Module handle.
+                     szModuleName,			    // Pointer to buffer to receive file name.
+                     nSize					    // Size of the buffer in characters.
                    );
   // GetModuleFileNameEx returns 0 on error.
   if (dwLength == 0) {
