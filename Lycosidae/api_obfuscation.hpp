@@ -182,10 +182,10 @@ __forceinline LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, con
   auto mdl = (LDR_MODULE *)mlink;
   HMODULE hKernel32 = NULL;
   hKernel32 = kernel32Handle();
-  const char *lstrcmpiW_ = (LPCSTR)PRINT_HIDE_STR("lstrcmpiW");
+  /*const char *lstrcmpiW_ = (LPCSTR)PRINT_HIDE_STR("lstrcmpiW");
   const uint64_t api_hash_lstrcmpiW = t1ha0(lstrcmpiW_, strlen(lstrcmpiW_), STRONG_SEED);
   temp_lstrcmpiW = static_cast<int(*)(LPCWSTR, LPCWSTR)>(parse_export_table(
-                     hKernel32, api_hash_lstrcmpiW, strlen(lstrcmpiW_), STRONG_SEED));
+                     hKernel32, api_hash_lstrcmpiW, strlen(lstrcmpiW_), STRONG_SEED));*/
   do
   {
     mdl = (LDR_MODULE *)mdl->e[0].Flink;
@@ -667,7 +667,7 @@ HANDLE hash_CreateFileA(
   __in DWORD flags,
   __in HANDLE template_file)
 {
-  const auto _hash = t1ha0("CreateFileA", strlen("CreateFileA"), STRONG_SEED);
+  const auto _hash = t1ha0((LPCSTR)PRINT_HIDE_STR("CreateFileA"), strlen((LPCSTR)PRINT_HIDE_STR("CreateFileA")), STRONG_SEED);
   temp_CreateFile = static_cast<HANDLE(WINAPI *)(LPCSTR,
                     DWORD,
                     DWORD,
@@ -675,7 +675,7 @@ HANDLE hash_CreateFileA(
                     DWORD,
                     DWORD,
                     HANDLE)>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
-                                     strlen("CreateFileA"),
+                                     strlen((LPCSTR)PRINT_HIDE_STR("CreateFileA")),
                                      STRONG_SEED));
   return temp_CreateFile(file_name, access, share_mode, security, creation_disposition, flags, template_file);
 }
@@ -828,9 +828,9 @@ DWORD hash_GetModuleFileNameW(HMODULE hModule,
 
 HMODULE hash_GetModuleHandleA(LPCSTR lpModuleName)
 {
-  const auto _hash = t1ha0("GetModuleHandleA", strlen("GetModuleHandleA"), STRONG_SEED);
+  const auto _hash = t1ha0((LPCSTR)PRINT_HIDE_STR("GetModuleHandleA"), strlen((LPCSTR)PRINT_HIDE_STR("GetModuleHandleA")), STRONG_SEED);
   temp_GetModuleHandleA = static_cast<HMODULE(WINAPI *)(LPCSTR)>(get_api(
-                            _hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"), strlen("GetModuleHandleA"), STRONG_SEED));
+                            _hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"), strlen((LPCSTR)PRINT_HIDE_STR("GetModuleHandleA")), STRONG_SEED));
   return temp_GetModuleHandleA(lpModuleName);
 }
 
@@ -1013,9 +1013,9 @@ void hash_SetLastError(DWORD dwErrCode)
 
 _Post_equals_last_error_ DWORD hash_GetLastError()
 {
-  const auto _hash = t1ha0("GetLastError", strlen("GetLastError"), STRONG_SEED);
+  const auto _hash = t1ha0((LPCSTR)PRINT_HIDE_STR("GetLastError"), strlen((LPCSTR)PRINT_HIDE_STR("GetLastError")), STRONG_SEED);
   temp_GetLastError = static_cast<DWORD(WINAPI *)()>(get_api(_hash, (LPCSTR)PRINT_HIDE_STR("kernel32.dll"),
-                      strlen("GetLastError"),
+                      strlen((LPCSTR)PRINT_HIDE_STR("GetLastError")),
                       STRONG_SEED));
   return temp_GetLastError();
 }
