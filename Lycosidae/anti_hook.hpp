@@ -10,6 +10,7 @@
 
 #include "api_obfuscation.hpp"
 #include "Lycosidae.hpp"
+#include "Additional.h"
 
 #pragma comment(lib, "Shlwapi.lib")
 
@@ -242,7 +243,7 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
         return ERR_MEM_DEPROTECT_FAILED;
       }
       // Replace the hooked module's .text section with the newly mapped module's.
-      memcpy(
+      copy_memory(
         (LPVOID)((DWORD_PTR)hModule + (DWORD_PTR)pish->VirtualAddress),
         (LPVOID)((DWORD_PTR)lpMapping + (DWORD_PTR)pish->VirtualAddress),
         pish->Misc.VirtualSize
