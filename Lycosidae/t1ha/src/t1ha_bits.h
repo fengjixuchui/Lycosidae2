@@ -296,7 +296,7 @@ static __maybe_unused __always_inline void e2k_add64carry_last(unsigned carry,
 #define add32carry_last(carry, base, addend, sum)                              \
   (void)_addcarry_u32(carry, base, addend, sum)
 
-static __forceinline char
+static char
 msvc32_add64carry_first(uint64_t base, uint64_t addend, uint64_t *sum) {
   uint32_t *const sum32 = (uint32_t *)sum;
   const uint32_t base_32l = (uint32_t)base;
@@ -309,7 +309,7 @@ msvc32_add64carry_first(uint64_t base, uint64_t addend, uint64_t *sum) {
 #define add64carry_first(base, addend, sum)                                    \
   msvc32_add64carry_first(base, addend, sum)
 
-static __forceinline char msvc32_add64carry_next(char carry, uint64_t base,
+static char msvc32_add64carry_next(char carry, uint64_t base,
                                                  uint64_t addend,
                                                  uint64_t *sum) {
   uint32_t *const sum32 = (uint32_t *)sum;
@@ -323,7 +323,7 @@ static __forceinline char msvc32_add64carry_next(char carry, uint64_t base,
 #define add64carry_next(carry, base, addend, sum)                              \
   msvc32_add64carry_next(carry, base, addend, sum)
 
-static __forceinline void msvc32_add64carry_last(char carry, uint64_t base,
+static void msvc32_add64carry_last(char carry, uint64_t base,
                                                  uint64_t addend,
                                                  uint64_t *sum) {
   uint32_t *const sum32 = (uint32_t *)sum;

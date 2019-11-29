@@ -3,12 +3,12 @@
 #include "anti_hook.hpp"
 #include "Lycosidae.hpp"
 
-__forceinline void log()
+void log()
 {
 }
 
 template <typename First, typename ...Rest>
-__forceinline void log(First &&message, Rest &&...rest)
+void log(First &&message, Rest &&...rest)
 {
   std::cout << std::forward<First>(message);
   log(std::forward<Rest>(rest)...);

@@ -46,7 +46,7 @@ typedef NTSTATUS(NTAPI *p_nt_query_information_process)(IN HANDLE, IN UINT, OUT 
 typedef NTSTATUS(WINAPI *p_nt_query_object)(IN HANDLE, IN UINT, OUT PVOID, IN ULONG, OUT PULONG);
 typedef NTSTATUS(__stdcall *t_nt_query_system_information)(IN ULONG, OUT PVOID, IN ULONG, OUT PULONG);
 
-__forceinline BOOL check_remote_debugger_present_api()
+BOOL check_remote_debugger_present_api()
 {
   auto b_is_dbg_present = FALSE;
   hash_CheckRemoteDebuggerPresent(hash_GetCurrentProcess(), &b_is_dbg_present);
@@ -72,7 +72,7 @@ BOOL nt_close_invalide_handle()
   return FALSE;
 }
 
-__forceinline BOOL nt_query_information_process_process_debug_flags()
+BOOL nt_query_information_process_process_debug_flags()
 {
   const auto process_debug_flags = 0x1f;
   const auto nt_query_info_process = reinterpret_cast<p_nt_query_information_process>(hash_GetProcAddress(
@@ -85,7 +85,7 @@ __forceinline BOOL nt_query_information_process_process_debug_flags()
   return FALSE;
 }
 
-__forceinline BOOL nt_query_information_process_process_debug_object()
+BOOL nt_query_information_process_process_debug_object()
 {
   const auto process_debug_object_handle = 0x1e;
   const auto nt_query_info_process = reinterpret_cast<p_nt_query_information_process>(hash_GetProcAddress(
@@ -100,7 +100,7 @@ __forceinline BOOL nt_query_information_process_process_debug_object()
   return FALSE;
 }
 
-__forceinline int str_cmp(const wchar_t *x, const wchar_t *y)
+int str_cmp(const wchar_t *x, const wchar_t *y)
 {
   while (*x)
   {
@@ -111,7 +111,7 @@ __forceinline int str_cmp(const wchar_t *x, const wchar_t *y)
   }
   return *static_cast<const wchar_t *>(x) - *static_cast<const wchar_t *>(y);
 }
-__forceinline int str_cmp2(const char *X, const char *Y)
+int str_cmp2(const char *X, const char *Y)
 {
   while (*X)
   {
@@ -125,7 +125,7 @@ __forceinline int str_cmp2(const char *X, const char *Y)
   // return the ASCII difference after converting char* to unsigned char*
   return *(const unsigned char *)X - *(const unsigned char *)Y;
 }
-__forceinline BOOL nt_query_object_object_all_types_information()
+BOOL nt_query_object_object_all_types_information()
 {
   const auto nt_query_object = reinterpret_cast<p_nt_query_object>(hash_GetProcAddress(
                                  hash_GetModuleHandleW(NTDLL), (LPCSTR)PRINT_HIDE_STR("NtQueryObject")));
@@ -168,7 +168,7 @@ __forceinline BOOL nt_query_object_object_all_types_information()
   return FALSE;
 }
 
-__forceinline BOOL process_job()
+BOOL process_job()
 {
   auto found_problem = FALSE;
   const DWORD job_process_struct_size = sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST) + sizeof(ULONG_PTR) * 1024;
@@ -240,7 +240,7 @@ BOOL set_handle_informatiom_protected_handle()
   return FALSE;
 }
 
-__forceinline BOOL titan_hide_check()
+BOOL titan_hide_check()
 {
   const auto ntdll = hash_GetModuleHandleW(NTDLL);
   const auto nt_query_system_information = reinterpret_cast<t_nt_query_system_information>(hash_GetProcAddress(
@@ -253,7 +253,7 @@ __forceinline BOOL titan_hide_check()
   return ret;
 }
 
-__forceinline BOOL NtQuerySystemInformation_SystemKernelDebuggerInformation()
+BOOL NtQuerySystemInformation_SystemKernelDebuggerInformation()
 {
   const int SystemKernelDebuggerInformation = 0x23;
   SYSTEM_KERNEL_DEBUGGER_INFORMATION KdDebuggerInfo;
@@ -269,7 +269,7 @@ __forceinline BOOL NtQuerySystemInformation_SystemKernelDebuggerInformation()
   return FALSE;
 }
 
-__forceinline BOOL SharedUserData_KernelDebugger()
+BOOL SharedUserData_KernelDebugger()
 {
   const ULONG_PTR UserSharedData = 0x7FFE0000;
   const UCHAR KdDebuggerEnabledByte = *(UCHAR *)(UserSharedData + 0x2D4);

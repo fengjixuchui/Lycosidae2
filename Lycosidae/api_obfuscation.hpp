@@ -58,14 +58,14 @@ typedef struct _PEB_c
 #endif
 
 #pragma warning (disable : 4996)
-__forceinline const wchar_t *char_to_wchar(const char *c)
+const wchar_t *char_to_wchar(const char *c)
 {
   const size_t cSize = strlen(c) + 1;
   wchar_t *wc = new wchar_t[cSize];
   mbstowcs(wc, c, cSize);
   return wc;
 }
-__forceinline int str_cmp3(const wchar_t *x, const wchar_t *y)
+int str_cmp3(const wchar_t *x, const wchar_t *y)
 {
   while (*x)
   {
@@ -80,19 +80,19 @@ static HMODULE(WINAPI *temp_LoadLibraryA)(__in LPCSTR file_name) = nullptr;
 
 static int (*temp_lstrcmpiW)(LPCWSTR lpString1, LPCWSTR lpString2) = nullptr;
 
-static __forceinline HMODULE hash_LoadLibraryA(__in LPCSTR file_name)
+static HMODULE hash_LoadLibraryA(__in LPCSTR file_name)
 {
   return temp_LoadLibraryA(file_name);
 }
 
-static __forceinline int hash_lstrcmpiW(LPCWSTR lpString1,
-                                        LPCWSTR lpString2)
+static int hash_lstrcmpiW(LPCWSTR lpString1,
+                          LPCWSTR lpString2)
 {
   return temp_lstrcmpiW(lpString1,
                         lpString2);
 }
 
-__forceinline HMODULE kernel32Handle(void)
+HMODULE kernel32Handle(void)
 {
   HMODULE dwResult = NULL;
   PEB_c *lpPEB = NULL;
@@ -130,7 +130,7 @@ __forceinline HMODULE kernel32Handle(void)
   return dwResult;
 }
 
-__forceinline LPVOID parse_export_table(HMODULE module, uint64_t api_hash, uint64_t len, const uint64_t seed)
+LPVOID parse_export_table(HMODULE module, uint64_t api_hash, uint64_t len, const uint64_t seed)
 {
   PIMAGE_DOS_HEADER img_dos_header;
   PIMAGE_NT_HEADERS img_nt_header;
@@ -161,7 +161,7 @@ __forceinline LPVOID parse_export_table(HMODULE module, uint64_t api_hash, uint6
   return func_find;
 }
 
-__forceinline LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, const uint64_t seed)
+LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, const uint64_t seed)
 {
   HMODULE krnl32, hDll;
   LPVOID api_func;
