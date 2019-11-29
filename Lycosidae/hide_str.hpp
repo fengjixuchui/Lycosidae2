@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdarg>
 #include <random>
+#include "Additional.h"
 
 #define MMIX(h,k) { k *= m; k ^= k >> r; k *= m; h *= m; h ^= k; }
 #define DEBUG_PRINT(m,...) //printf(m,__VA_ARGS__)
@@ -150,12 +151,12 @@ class XTEA3
     static unsigned char dataArray[BLOCK_SIZE];
     for (int i = 0; i < len / BLOCK_SIZE; i++)
     {
-      memcpy(dataArray, inout, BLOCK_SIZE);
+      copy_memory(dataArray, inout, BLOCK_SIZE);
       if (encrypt)
         xtea3_encipher(48, (uint32_t *)dataArray, key);
       else
         xtea3_decipher(48, (uint32_t *)dataArray, key);
-      memcpy(inout, dataArray, BLOCK_SIZE);
+      copy_memory(inout, dataArray, BLOCK_SIZE);
       inout = inout + BLOCK_SIZE;
     }
     if (len % BLOCK_SIZE != 0)
@@ -163,12 +164,12 @@ class XTEA3
       int mod = len % BLOCK_SIZE;
       int offset = (len / BLOCK_SIZE) * BLOCK_SIZE;
       uint32_t data[BLOCK_SIZE];
-      memcpy(data, inout + offset, mod);
+      copy_memory(data, inout + offset, mod);
       if (encrypt)
         xtea3_encipher(32, (uint32_t *)data, key);
       else
         xtea3_decipher(32, (uint32_t *)data, key);
-      memcpy(inout + offset, data, mod);
+      copy_memory(inout + offset, data, mod);
     }
   }
 
@@ -203,9 +204,9 @@ class XTEA3
     // Put the size of the crypted data and the size of the original in the resulting buffer
     size_crypt = size_crypt_tmp + 8;
     size_decrypt_data = size;
-    memcpy(data_ptr, (char *)&size_crypt, 4);
-    memcpy(data_ptr + 4, (char *)&size_decrypt_data, 4);
-    memcpy(data_ptr + 8, data, size);
+    copy_memory(data_ptr, (char *)&size_crypt, 4);
+    copy_memory(data_ptr + 4, (char *)&size_decrypt_data, 4);
+    copy_memory(data_ptr + 8, data, size);
     // Encrypt data
     xtea3_data_crypt(data_ptr + 8, size_crypt - 8, true, key);
     return data_ptr;
@@ -214,8 +215,8 @@ class XTEA3
   uint8_t *data_decrypt(const uint8_t *data, const uint32_t key[8], uint32_t size)
   {
     // Get the size of the crypted data and the size of the original
-    memcpy((char *)&size_crypt, data, 4);
-    memcpy((char *)&size_decrypt_data, data + 4, 4);
+    copy_memory((char *)&size_crypt, data, 4);
+    copy_memory((char *)&size_decrypt_data, data + 4, 4);
     DEBUG_PRINT("DECRYPT: \n");
     DEBUG_PRINT("SIZE = %d \n", size);
     DEBUG_PRINT("size_crypt = %d \n", size_crypt);
@@ -230,7 +231,7 @@ class XTEA3
         DEBUG_PRINT("NO FREE MEM \n");
         return NULL;
       }
-      memcpy(data_ptr, data + 8, size_crypt - 8);
+      copy_memory(data_ptr, data + 8, size_crypt - 8);
       // Decrypt data
       xtea3_data_crypt(data_ptr, size_crypt - 8, false, key);
     }
