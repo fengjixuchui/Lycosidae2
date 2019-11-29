@@ -172,6 +172,7 @@
     <ClCompile Include="t1ha\src\t1ha_selfcheck_all.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Additional.h" />
     <ClInclude Include="anti_hook.hpp" />
     <ClInclude Include="api_obfuscation.hpp" />
     <ClInclude Include="hide_str.hpp" />
