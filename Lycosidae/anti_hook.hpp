@@ -202,7 +202,7 @@ DWORD GetModuleName(const HMODULE hModule, LPSTR szModuleName, const DWORD nSize
   // GetModuleFileNameEx returns 0 on error.
   if (dwLength == 0) {
     // Default value if the module name cannot be found.
-    strncpy(szModuleName, (LPCSTR)PRINT_HIDE_STR("<not found>"), nSize - 1); // TODO: not tested error with HideString
+    __strncpy(szModuleName, (LPCSTR)PRINT_HIDE_STR("<not found>"), nSize - 1); // TODO: not tested error with HideString
     return ERR_MOD_NAME_NOT_FOUND;
   }
   return ERR_SUCCESS;

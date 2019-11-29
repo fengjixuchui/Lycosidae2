@@ -70,3 +70,11 @@ void *copy_memory(void *dest, const void *src, size_t size)
   small_copy(position, src, remaining_bytes);
   return dest;
 }
+
+char *__strncpy(char *s, const char *ct, size_t n) {
+  char *saver = s;
+  while (n--)
+    *saver++ = *ct++;
+  *saver = '\0';
+  return s;
+}
