@@ -118,10 +118,6 @@ LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, const uint64_t se
   auto mdl = (LDR_MODULE *)mlink;
   HMODULE hKernel32 = NULL;
   hKernel32 = kernel32Handle();
-  /*const char *lstrcmpiW_ = (LPCSTR)PRINT_HIDE_STR("lstrcmpiW");
-  const uint64_t api_hash_lstrcmpiW = t1ha0(lstrcmpiW_, strlen(lstrcmpiW_), STRONG_SEED);
-  temp_lstrcmpiW = static_cast<int(*)(LPCWSTR, LPCWSTR)>(parse_export_table(
-                     hKernel32, api_hash_lstrcmpiW, strlen(lstrcmpiW_), STRONG_SEED));*/
   do
   {
     mdl = (LDR_MODULE *)mdl->e[0].Flink;
