@@ -41,14 +41,14 @@ unsigned int __tid()
 
 PVOID Alloc(OPTIONAL PVOID Base, SIZE_T Size, ULONG Protect)
 {
-  NTSTATUS Status = hash_NtAllocateVirtualMemory(NtCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
+  NTSTATUS Status = hash_NtAllocateVirtualMemory(hash_GetCurrentProcess(), &Base, Base ? 12 : 0, &Size, MEM_RESERVE | MEM_COMMIT, Protect);
   return NT_SUCCESS(Status) ? Base : NULL;
 }
 
 VOID Free(PVOID Base)
 {
   SIZE_T RegionSize = 0;
-  hash_NtFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+  hash_NtFreeVirtualMemory(hash_GetCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
 }
 
 BOOLEAN NTAPI EnumProcesses_(
@@ -264,7 +264,7 @@ DWORD UnhookModule(const HMODULE hModule)
             hModule,		// Handle to the hooked module.
             lpMapping		// Pointer to the newly mapped module.
           );
-  hash_NtFlushInstructionCache(NtCurrentProcess(), NULL, 0);
+  hash_NtFlushInstructionCache(hash_GetCurrentProcess(), NULL, 0);
   ResumeThreads();
   if (dwRet) {
     // Something went wrong!
