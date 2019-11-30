@@ -101,7 +101,6 @@ typedef enum _WRK_MEMORY_INFORMATION_CLASS {
 #define ROR(x,n) (((x) >> (n)) | ((x) << (32-(n))))
 
 // -----------------
-#pragma region Export Work
 struct LDR_MODULE
 {
   LIST_ENTRY e[3];

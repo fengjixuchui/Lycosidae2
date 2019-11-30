@@ -10,6 +10,8 @@
 #include "hide_str.hpp"
 #include "t1ha/t1ha.h"
 
+#pragma region Export Work
+
 static HMODULE(WINAPI *temp_LoadLibraryA)(__in LPCSTR file_name) = nullptr;
 
 static int (*temp_lstrcmpiW)(LPCWSTR lpString1, LPCWSTR lpString2) = nullptr;
