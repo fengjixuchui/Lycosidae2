@@ -4,8 +4,6 @@
 #include <random>
 #include "Additional.h"
 
-#define NTDLL char_to_wchar((LPCSTR)PRINT_HIDE_STR("ntdll.dll"))
-
 inline uint32_t Murmur3(const void *key, int len, unsigned int seed)
 {
   const unsigned int m = 0x5bd1e995;

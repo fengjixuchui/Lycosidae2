@@ -84,6 +84,7 @@ typedef enum _WRK_MEMORY_INFORMATION_CLASS {
 #define BLOCK_SIZE 16
 #define HIDE_STR(hide, s) auto hide = HideString<sizeof(s) - 1, __COUNTER__ >(s, std::make_index_sequence<sizeof(s) - 1>())
 #define PRINT_HIDE_STR(s) (HideString<sizeof(s) - 1, __COUNTER__ >(s, std::make_index_sequence<sizeof(s) - 1>()).decrypt())
+#define NTDLL char_to_wchar((LPCSTR)PRINT_HIDE_STR("ntdll.dll"))
 
 // Lycosidae
 #define DEBUG_READ_EVENT 0x0001
