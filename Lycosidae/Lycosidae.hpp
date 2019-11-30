@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "Additional.h"
 #include "api_obfuscation.hpp"
 #include "hide_str.hpp"
 
@@ -11,40 +12,6 @@
 #include <Psapi.h>
 #include <xstring>
 #include <cassert>
-
-#define NTDLL char_to_wchar((LPCSTR)PRINT_HIDE_STR("ntdll.dll"))
-
-#define DEBUG_READ_EVENT 0x0001
-#define DEBUG_PROCESS_ASSIGN 0x0002
-#define DEBUG_SET_INFORMATION 0x0004
-#define DEBUG_QUERY_INFORMATION 0x0008
-#define DEBUG_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | \
-    DEBUG_READ_EVENT | DEBUG_PROCESS_ASSIGN | DEBUG_SET_INFORMATION | \
-    DEBUG_QUERY_INFORMATION)
-
-typedef struct object_type_information
-{
-  UNICODE_STRING type_name;
-  ULONG total_number_of_handles;
-  ULONG total_number_of_objects;
-} object_type_information, * pobject_type_information;
-
-typedef struct object_all_information
-{
-  ULONG number_of_objects;
-  object_type_information object_type_information[1];
-} object_all_information, * pobject_all_information;
-
-typedef struct _SYSTEM_KERNEL_DEBUGGER_INFORMATION
-{
-  BOOLEAN KernelDebuggerEnabled;
-  BOOLEAN KernelDebuggerNotPresent;
-} SYSTEM_KERNEL_DEBUGGER_INFORMATION, * PSYSTEM_KERNEL_DEBUGGER_INFORMATION;
-
-typedef NTSTATUS(NTAPI *p_nt_close)(HANDLE);
-typedef NTSTATUS(NTAPI *p_nt_query_information_process)(IN HANDLE, IN UINT, OUT PVOID, IN ULONG, OUT PULONG);
-typedef NTSTATUS(WINAPI *p_nt_query_object)(IN HANDLE, IN UINT, OUT PVOID, IN ULONG, OUT PULONG);
-typedef NTSTATUS(__stdcall *t_nt_query_system_information)(IN ULONG, OUT PVOID, IN ULONG, OUT PULONG);
 
 BOOL check_remote_debugger_present_api()
 {
@@ -100,31 +67,6 @@ BOOL nt_query_information_process_process_debug_object()
   return FALSE;
 }
 
-int str_cmp(const wchar_t *x, const wchar_t *y)
-{
-  while (*x)
-  {
-    if (*x != *y)
-      break;
-    x++;
-    y++;
-  }
-  return *static_cast<const wchar_t *>(x) - *static_cast<const wchar_t *>(y);
-}
-int str_cmp2(const char *X, const char *Y)
-{
-  while (*X)
-  {
-    // if characters differ or end of second string is reached
-    if (*X != *Y)
-      break;
-    // move to next pair of characters
-    X++;
-    Y++;
-  }
-  // return the ASCII difference after converting char* to unsigned char*
-  return *(const unsigned char *)X - *(const unsigned char *)Y;
-}
 BOOL nt_query_object_object_all_types_information()
 {
   const auto nt_query_object = reinterpret_cast<p_nt_query_object>(hash_GetProcAddress(
@@ -146,8 +88,8 @@ BOOL nt_query_object_object_all_types_information()
   for (UINT i = 0; i < num_objects; i++)
   {
     const auto pObjectTypeInfo = reinterpret_cast<pobject_type_information>(p_obj_info_location);
-    if (str_cmp((const wchar_t *)(char_to_wchar((LPCSTR)PRINT_HIDE_STR("DebugObject"))),
-                (const wchar_t *)(pObjectTypeInfo->type_name.Buffer)) == 0)
+    if (str_cmp_wchar((const wchar_t *)(char_to_wchar((LPCSTR)PRINT_HIDE_STR("DebugObject"))),
+                      (const wchar_t *)(pObjectTypeInfo->type_name.Buffer)) == 0)
     {
       if (pObjectTypeInfo->total_number_of_objects > 0)
       {

@@ -4,12 +4,7 @@
 #include <random>
 #include "Additional.h"
 
-#define MMIX(h,k) { k *= m; k ^= k >> r; k *= m; h *= m; h ^= k; }
-#define DEBUG_PRINT(m,...) //printf(m,__VA_ARGS__)
-#define BLOCK_SIZE 16
-
-#define HIDE_STR(hide, s) auto hide = HideString<sizeof(s) - 1, __COUNTER__ >(s, std::make_index_sequence<sizeof(s) - 1>())
-#define PRINT_HIDE_STR(s) (HideString<sizeof(s) - 1, __COUNTER__ >(s, std::make_index_sequence<sizeof(s) - 1>()).decrypt())
+#define NTDLL char_to_wchar((LPCSTR)PRINT_HIDE_STR("ntdll.dll"))
 
 inline uint32_t Murmur3(const void *key, int len, unsigned int seed)
 {

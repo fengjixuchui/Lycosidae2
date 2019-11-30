@@ -8,81 +8,9 @@
 #include <Shlwapi.h>
 #include <winternl.h>
 
+#include "Additional.h"
 #include "api_obfuscation.hpp"
 #include "Lycosidae.hpp"
-#include "Additional.h"
-
-#pragma comment(lib, "Shlwapi.lib")
-
-#define NtCurrentProcess() ((HANDLE)-1)
-
-typedef enum _ERR_CODE {
-  ERR_SUCCESS,
-  ERR_ENUM_PROCESS_MODULES_FAILED,
-  ERR_SIZE_TOO_SMALL,
-  ERR_MOD_NAME_NOT_FOUND,
-  ERR_MOD_QUERY_FAILED,
-  ERR_CREATE_FILE_FAILED,
-  ERR_CREATE_FILE_MAPPING_FAILED,
-  ERR_CREATE_FILE_MAPPING_ALREADY_EXISTS,
-  ERR_MAP_FILE_FAILED,
-  ERR_MEM_DEPROTECT_FAILED,
-  ERR_MEM_REPROTECT_FAILED,
-  ERR_TEXT_SECTION_NOT_FOUND,
-  ERR_FILE_PATH_QUERY_FAILED
-} ERR_CODE;
-
-typedef enum _SUSPEND_RESUME_TYPE {
-  srtSuspend,
-  srtResume
-} SUSPEND_RESUME_TYPE, * PSUSPEND_RESUME_TYPE;
-
-typedef struct _SUSPEND_RESUME_INFO {
-  ULONG CurrentPid;
-  ULONG CurrentTid;
-  SUSPEND_RESUME_TYPE Type;
-} SUSPEND_RESUME_INFO, * PSUSPEND_RESUME_INFO;
-
-typedef struct _WRK_SYSTEM_PROCESS_INFORMATION {
-  ULONG NextEntryOffset;
-  ULONG NumberOfThreads;
-  LARGE_INTEGER SpareLi1;
-  LARGE_INTEGER SpareLi2;
-  LARGE_INTEGER SpareLi3;
-  LARGE_INTEGER CreateTime;
-  LARGE_INTEGER UserTime;
-  LARGE_INTEGER KernelTime;
-  UNICODE_STRING ImageName;
-  KPRIORITY BasePriority;
-  HANDLE UniqueProcessId;
-  HANDLE InheritedFromUniqueProcessId;
-  ULONG HandleCount;
-  ULONG SessionId;
-  ULONG_PTR PageDirectoryBase;
-  SIZE_T PeakVirtualSize;
-  SIZE_T VirtualSize;
-  ULONG PageFaultCount;
-  SIZE_T PeakWorkingSetSize;
-  SIZE_T WorkingSetSize;
-  SIZE_T QuotaPeakPagedPoolUsage;
-  SIZE_T QuotaPagedPoolUsage;
-  SIZE_T QuotaPeakNonPagedPoolUsage;
-  SIZE_T QuotaNonPagedPoolUsage;
-  SIZE_T PagefileUsage;
-  SIZE_T PeakPagefileUsage;
-  SIZE_T PrivatePageCount;
-  LARGE_INTEGER ReadOperationCount;
-  LARGE_INTEGER WriteOperationCount;
-  LARGE_INTEGER OtherOperationCount;
-  LARGE_INTEGER ReadTransferCount;
-  LARGE_INTEGER WriteTransferCount;
-  LARGE_INTEGER OtherTransferCount;
-  SYSTEM_THREAD_INFORMATION Threads[1];
-} WRK_SYSTEM_PROCESS_INFORMATION, * PWRK_SYSTEM_PROCESS_INFORMATION;
-
-typedef enum _WRK_MEMORY_INFORMATION_CLASS {
-  MemoryBasicInformation
-} WRK_MEMORY_INFORMATION_CLASS, * PWRK_MEMORY_INFORMATION_CLASS;
 
 void *__teb()
 {
@@ -231,7 +159,7 @@ DWORD ReplaceExecSection(const HMODULE hModule, const LPVOID lpMapping)
   // Walk the section headers and find the .text section.
   for (WORD i = 0; i < pinh->FileHeader.NumberOfSections; i++) {
     PIMAGE_SECTION_HEADER pish = (PIMAGE_SECTION_HEADER)((DWORD_PTR)IMAGE_FIRST_SECTION(pinh) + ((DWORD_PTR)IMAGE_SIZEOF_SECTION_HEADER * i));
-    if (!str_cmp2((const char *)pish->Name, (LPCSTR)PRINT_HIDE_STR(".text"))) {
+    if (!str_cmp_char((const char *)pish->Name, (LPCSTR)PRINT_HIDE_STR(".text"))) {
       // Deprotect the module's memory region for write permissions.
       DWORD flProtect = ProtectMemory(
                           (LPVOID)((DWORD_PTR)hModule + (DWORD_PTR)pish->VirtualAddress),	// Address to protect.

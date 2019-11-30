@@ -1,81 +1,15 @@
 ﻿#pragma once
-#include "hide_str.hpp"
-#include "t1ha/t1ha.h"
 
+#include <Windows.h>
 #include <string>
 #include <TlHelp32.h>
-#include <Windows.h>
 #include <winnt.h>
 #include <winternl.h>
 
-#define STRONG_SEED 10376313370251892926
-#define RAND_DWORD1	0x03EC7B5E
-#define ROR(x,n) (((x) >> (n)) | ((x) << (32-(n))))
+#include "Additional.h"
+#include "hide_str.hpp"
+#include "t1ha/t1ha.h"
 
-// -----------------
-#pragma region Export Work
-struct LDR_MODULE
-{
-  LIST_ENTRY e[3];
-  HMODULE base;
-  void *entry;
-  UINT size;
-  UNICODE_STRING dllPath;
-  UNICODE_STRING dllname;
-};
-
-typedef struct _PEB_LDR_DATA_
-{
-  BYTE Reserved1[8];
-  PVOID Reserved2[3];
-  LIST_ENTRY *InMemoryOrderModuleList;
-} PEB_LDR_DATA_, * PPEB_LDR_DATA_;
-
-#ifdef _WIN64
-
-typedef struct _PEB_c
-{
-  BYTE Reserved1[2];
-  BYTE BeingDebugged;
-  BYTE Reserved2[21];
-  PPEB_LDR_DATA_ Ldr;
-} PEB_c;
-
-#else
-
-typedef struct _PEB_c
-{
-  /*0x000*/     UINT8        InheritedAddressSpace;
-  /*0x001*/     UINT8        ReadImageFileExecOptions;
-  /*0x002*/     UINT8        BeingDebugged;
-  /*0x003*/     UINT8        SpareBool;
-  /*0x004*/     VOID *Mutant;
-  /*0x008*/     VOID *ImageBaseAddress;
-  /*0x00C*/     struct _PEB_LDR_DATA *Ldr;
-  /*.....*/
-} PEB_c;
-
-#endif
-
-#pragma warning (disable : 4996)
-const wchar_t *char_to_wchar(const char *c)
-{
-  const size_t cSize = strlen(c) + 1;
-  wchar_t *wc = new wchar_t[cSize];
-  mbstowcs(wc, c, cSize);
-  return wc;
-}
-int str_cmp3(const wchar_t *x, const wchar_t *y)
-{
-  while (*x)
-  {
-    if (*x != *y)
-      break;
-    x++;
-    y++;
-  }
-  return *static_cast<const wchar_t *>(x) - *static_cast<const wchar_t *>(y);
-}
 static HMODULE(WINAPI *temp_LoadLibraryA)(__in LPCSTR file_name) = nullptr;
 
 static int (*temp_lstrcmpiW)(LPCWSTR lpString1, LPCWSTR lpString2) = nullptr;
@@ -191,7 +125,7 @@ LPVOID get_api(uint64_t api_hash, LPCSTR module, uint64_t len, const uint64_t se
     mdl = (LDR_MODULE *)mdl->e[0].Flink;
     if (mdl->base != nullptr)
     {
-      if (!str_cmp3(mdl->dllname.Buffer, char_to_wchar((LPCSTR)PRINT_HIDE_STR("kernel32.dll"))))
+      if (!str_cmp_wchar(mdl->dllname.Buffer, char_to_wchar((LPCSTR)PRINT_HIDE_STR("kernel32.dll"))))
       {
         break;
       }
