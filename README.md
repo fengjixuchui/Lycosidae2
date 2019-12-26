@@ -4,9 +4,9 @@ Modern anti-debug
 
 ## Features
 
-- [x] Import no leak
+- [x] Dynamic api import by hash
 
-- [x] Strings no leak
+- [x] Compile time string hashing
 
 ## Third Party
 
